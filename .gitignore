@@ -30,3 +30,13 @@ _build
 logs
 
 .idea
+
+
+*.npy
+*.csv
+*.xls
+Monash_UEA_UCR_Regression_Archive/
+alpha_data_16/
+g-research-crypto-forecasting/
+*.h5
+runs/

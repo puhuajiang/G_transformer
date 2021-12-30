@@ -15,7 +15,7 @@ import ipdb
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-import sklearn
+# import sklearn
 
 from utils import utils, analysis
 from models.loss import l2_reg_loss
@@ -400,6 +400,7 @@ class SupervisedRunner(BaseRunner):
             X, targets, padding_masks, IDs = batch
             targets = targets.to(self.device)
             padding_masks = padding_masks.to(self.device)  # 0s: ignore
+            print('padding',padding_masks)
             # regression: (batch_size, num_labels); classification: (batch_size, num_classes) of logits
             predictions = self.model(X.to(self.device), padding_masks)
 
@@ -420,10 +421,10 @@ class SupervisedRunner(BaseRunner):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=4.0)
             self.optimizer.step()
 
-            metrics = {"loss": mean_loss.item()}
-            if i % self.print_interval == 0:
-                ending = "" if epoch_num is None else 'Epoch {} '.format(epoch_num)
-                self.print_callback(i, metrics, prefix='Training ' + ending)
+            # metrics = {"loss": mean_loss.item()}
+            # if i % self.print_interval == 0:
+            #     ending = "" if epoch_num is None else 'Epoch {} '.format(epoch_num)
+            #     self.print_callback(i, metrics, prefix='Training ' + ending)
 
             with torch.no_grad():
                 total_samples += len(loss)
@@ -471,24 +472,24 @@ class SupervisedRunner(BaseRunner):
         self.epoch_metrics['epoch'] = epoch_num
         self.epoch_metrics['loss'] = epoch_loss
 
-        if self.classification:
-            predictions = torch.from_numpy(np.concatenate(per_batch['predictions'], axis=0))
-            probs = torch.nn.functional.softmax(predictions)  # (total_samples, num_classes) est. prob. for each class and sample
-            predictions = torch.argmax(probs, dim=1).cpu().numpy()  # (total_samples,) int class index for each sample
-            probs = probs.cpu().numpy()
-            targets = np.concatenate(per_batch['targets'], axis=0).flatten()
-            class_names = np.arange(probs.shape[1])  # TODO: temporary until I decide how to pass class names
-            metrics_dict = self.analyzer.analyze_classification(predictions, targets, class_names)
+        # if self.classification:
+        #     predictions = torch.from_numpy(np.concatenate(per_batch['predictions'], axis=0))
+        #     probs = torch.nn.functional.softmax(predictions)  # (total_samples, num_classes) est. prob. for each class and sample
+        #     predictions = torch.argmax(probs, dim=1).cpu().numpy()  # (total_samples,) int class index for each sample
+        #     probs = probs.cpu().numpy()
+        #     targets = np.concatenate(per_batch['targets'], axis=0).flatten()
+        #     class_names = np.arange(probs.shape[1])  # TODO: temporary until I decide how to pass class names
+        #     metrics_dict = self.analyzer.analyze_classification(predictions, targets, class_names)
 
-            self.epoch_metrics['accuracy'] = metrics_dict['total_accuracy']  # same as average recall over all classes
-            self.epoch_metrics['precision'] = metrics_dict['prec_avg']  # average precision over all classes
+        #     self.epoch_metrics['accuracy'] = metrics_dict['total_accuracy']  # same as average recall over all classes
+        #     self.epoch_metrics['precision'] = metrics_dict['prec_avg']  # average precision over all classes
 
-            if self.model.num_classes == 2:
-                false_pos_rate, true_pos_rate, _ = sklearn.metrics.roc_curve(targets, probs[:, 1])  # 1D scores needed
-                self.epoch_metrics['AUROC'] = sklearn.metrics.auc(false_pos_rate, true_pos_rate)
+        #     if self.model.num_classes == 2:
+        #         false_pos_rate, true_pos_rate, _ = sklearn.metrics.roc_curve(targets, probs[:, 1])  # 1D scores needed
+        #         self.epoch_metrics['AUROC'] = sklearn.metrics.auc(false_pos_rate, true_pos_rate)
 
-                prec, rec, _ = sklearn.metrics.precision_recall_curve(targets, probs[:, 1])
-                self.epoch_metrics['AUPRC'] = sklearn.metrics.auc(rec, prec)
+        #         prec, rec, _ = sklearn.metrics.precision_recall_curve(targets, probs[:, 1])
+        #         self.epoch_metrics['AUPRC'] = sklearn.metrics.auc(rec, prec)
 
         if keep_all:
             return self.epoch_metrics, per_batch

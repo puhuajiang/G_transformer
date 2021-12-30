@@ -22,8 +22,9 @@ import json
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
+from tensorboardX import SummaryWriter
 # Project modules
 from options import Options
 from running import setup, pipeline_factory, validate, check_progress, NEG_METRICS
@@ -36,7 +37,8 @@ from optimizers import get_optimizer
 
 
 def main(config):
-
+    print(config['batch_size'])
+    # exit()
     total_epoch_time = 0
     total_eval_time = 0
 
@@ -61,6 +63,8 @@ def main(config):
     data_class = data_factory[config['data_class']]
     my_data = data_class(config['data_dir'], pattern=config['pattern'], n_proc=config['n_proc'], limit_size=config['limit_size'], config=config)
     feat_dim = my_data.feature_df.shape[1]  # dimensionality of data features
+    print(feat_dim)
+
     if config['task'] == 'classification':
         validation_method = 'StratifiedShuffleSplit'
         labels = my_data.labels_df.values.flatten()
@@ -151,8 +155,8 @@ def main(config):
                 param.requires_grad = False
 
     logger.info("Model:\n{}".format(model))
-    logger.info("Total number of parameters: {}".format(utils.count_parameters(model)))
-    logger.info("Trainable parameters: {}".format(utils.count_parameters(model, trainable=True)))
+    # logger.info("Total number of parameters: {}".format(utils.count_parameters(model)))
+    # logger.info("Trainable parameters: {}".format(utils.count_parameters(model, trainable=True)))
 
 
     # Initialize optimizer

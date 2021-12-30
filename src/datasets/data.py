@@ -9,7 +9,7 @@ from itertools import repeat, chain
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from sktime.utils import load_data
+# from sktime.utils import load_data
 
 from datasets import utils
 
@@ -363,19 +363,19 @@ class TSRegressionArchive(BaseData):
         if self.config['task'] == 'regression':
             df, labels = utils.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
             labels_df = pd.DataFrame(labels, dtype=np.float32)
-        elif self.config['task'] == 'classification':
-            df, labels = load_data.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
-            labels = pd.Series(labels, dtype="category")
-            self.class_names = labels.cat.categories
-            labels_df = pd.DataFrame(labels.cat.codes, dtype=np.int8)  # int8-32 gives an error when using nn.CrossEntropyLoss
-        else:  # e.g. imputation
-            try:
-                df, labels = load_data.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
-                                                                     replace_missing_vals_with='NaN')
-            except:
-                df, _ = utils.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
-                                                                 replace_missing_vals_with='NaN')
-            labels_df = None
+        # elif self.config['task'] == 'classification':
+        #     df, labels = load_data.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
+        #     labels = pd.Series(labels, dtype="category")
+        #     self.class_names = labels.cat.categories
+        #     labels_df = pd.DataFrame(labels.cat.codes, dtype=np.int8)  # int8-32 gives an error when using nn.CrossEntropyLoss
+        # else:  # e.g. imputation
+        #     try:
+        #         df, labels = load_data.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
+        #                                                              replace_missing_vals_with='NaN')
+        #     except:
+        #         df, _ = utils.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
+        #                                                          replace_missing_vals_with='NaN')
+        #     labels_df = None
 
         lengths = df.applymap(lambda x: len(x)).values  # (num_samples, num_dimensions) array containing the length of each series
         horiz_diffs = np.abs(lengths - np.expand_dims(lengths[:, 0], -1))

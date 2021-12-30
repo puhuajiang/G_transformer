@@ -125,7 +125,7 @@ class Options(object):
                                  help=("Comma separated string of multiplicative factors to be applied to lr "
                                        "at corresponding steps specified in `lr_step`. If a single value is provided, "
                                        "it will be replicated to match the number of steps in `lr_step`."))
-        self.parser.add_argument('--batch_size', type=int, default=64,
+        self.parser.add_argument('--batch_size', type=int, default=512,
                                  help='Training batch size')
         self.parser.add_argument('--l2_reg', type=float, default=0,
                                  help='L2 weight regularization parameter')
