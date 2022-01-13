@@ -17,10 +17,10 @@ class G_Dataset(Dataset):
 
     def __init__(self, data_path,batch_size,WINDOW_SIZE,split='train'):
         super(G_Dataset, self).__init__()
-        self.X_train = np.load(os.path.join(data_path,'X_train1.npy'))
-        self.X_test = np.load(os.path.join(data_path,'X_test1.npy'))
-        self.Y_train = np.load(os.path.join(data_path,'y_train1.npy'))
-        self.Y_test = np.load(os.path.join(data_path,'y_test1.npy'))
+        self.X_train = np.load(os.path.join(data_path,'X_train_30.npy'))
+        self.X_test = np.load(os.path.join(data_path,'X_test_30.npy'))
+        self.Y_train = np.load(os.path.join(data_path,'y_train_30.npy'))
+        self.Y_test = np.load(os.path.join(data_path,'y_test_30.npy'))
         # print(self.X_train.shape,self.Y_train.shape)
         self.batch_size = batch_size
         self.split = split
@@ -39,14 +39,16 @@ class G_Dataset(Dataset):
             y = self.Y_test    
             size = self.X_test.shape[0]        
         # for i in range(self.batch_size):
-        start_ind = self.length *idx
+        start_ind = idx#self.length *idx
         end_ind = start_ind + self.length 
         if end_ind <= size:
             batch_x = x[start_ind : end_ind]
             batch_y  = y[end_ind -1]
         batch_x = np.array(batch_x,dtype=np.float32)
-        batch_y = np.array(batch_y,dtype=np.float32)
+        batch_y = np.array(batch_y,dtype=np.float32) #/ 0.00513
         batch_x[np.isnan(batch_x)] = 0
+        batch_x[np.isinf(batch_x)] = 0
+        # batch_y = F.sigmoid(batch_y)
         # print(batch_x.shape)
         # mean = np.mean(batch_x,axis=0)
         # std =  np.std(batch_x,axis=0)
@@ -54,8 +56,9 @@ class G_Dataset(Dataset):
         # # print(batch_x.shape)
         # for i in range(batch_x.shape[0]):
         #     batch_x[i][np.where(std==0)] = mean[np.where(std==0)]
-        if np.any(np.isnan(batch_x)):
+        if np.any(np.isnan(batch_x)) or np.any(np.isinf(batch_x)):
             print(idx)
+
             print('X is nan')
             exit()
         if np.any(np.isnan(batch_y)):
@@ -65,9 +68,9 @@ class G_Dataset(Dataset):
 
     def __len__(self):
         if self.split == 'train':
-            return self.X_train.shape[0] // self.length
+            return self.X_train.shape[0]  - self.length
         elif self.split == 'test':  
-            return self.X_test.shape[0] // self.length
+            return self.X_test.shape[0] - self.length
 
 
 class G_Trans(nn.modules.Module):
@@ -86,6 +89,7 @@ class G_Trans(nn.modules.Module):
                                                         norm, freeze).to(device))
         self.f1 = nn.Linear(asset*num_classes,num_classes)
         self.f2 = nn.Linear(num_classes,asset)
+        self.sigmod = nn.Sigmoid()
     def forward(self, X):
         batch_size,window_size,asset,feature = X.shape
         output = []
@@ -96,6 +100,7 @@ class G_Trans(nn.modules.Module):
         final = torch.cat(output,1)
         final = self.f1(final)
         final = self.f2(final)
+        # final = self.sigmod(final)
         return final
 if __name__ == "__main__":
     # dataset = G_Dataset('D:\mvts_transformer\src\datasets',512,15,'test')
